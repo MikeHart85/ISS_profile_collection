@@ -19,7 +19,7 @@ detector_dictionary = {bpm_fm.name: {'obj': bpm_fm, 'elements': ['bpm_fm_stats1_
             pb9.enc1.name: {'obj': pb9.enc1, 'elements': ['pb9_enc1_pos_I']},
             it.name: {'obj': it, 'elements': ['pba1_adc1_volt']},
             iff.name: {'obj': iff, 'elements': ['pba1_adc6_volt']},
-            i0.name: {'obj': i0, 'elements': ['pba1_adc7_volt']},
+            i0.name: {'obj': i0, 'elements': ['pba1_adc7_volt'],'channels': ['volt']},
             ir.name: {'obj': ir, 'elements': ['pba2_adc6_volt']},
             pba2.adc7.name: {'obj': pba2.adc7, 'elements': ['pba2_adc7_volt']},
             xia1.name: {'obj': xia1, 'elements': xia_list}}
@@ -37,15 +37,9 @@ motors_dictionary = {'slits_v_gap': {'name': slits.v_gap.name, 'description':'B1
                'hhm_y': {'name': hhm.y.name,'description':'A Monochromator Y', 'object': hhm.y},
                'hhm_pitch': {'name': hhm.pitch.name, 'description':'A Monochromator Pitch','object': hhm.pitch},
                'hhm_roll': {'name': hhm.roll.name, 'description':'A Monochromator Roll', 'object': hhm.roll},
-               #'hhrm_yu': {'name': hhrm.yu.name, 'object': hhrm.yu},
-               #'hhrm_yd1': {'name': hhrm.yd1.name, 'object': hhrm.yd1},
-               #'hhrm_yd2': {'name': hhrm.yd2.name, 'object': hhrm.yd2},
                'hhrm_mir_pitch': {'name': hhrm.mir_pitch.name, 'description':'B1 HHR Mirror Pitch','object': hhrm.mir_pitch},
                'hhrm_table_pitch': {'name': hhrm.table_pitch.name, 'description':'B1 HHR Mirror Table Pitch','object': hhrm.table_pitch},
                'hhrm_y': {'name': hhrm.y.name, 'description':'B1 HHR Mirror Table Height','object': hhrm.y},
-               #'hrm_theta': {'name': hrm.theta.name, 'object': hrm.theta},
-               #'hrm_pitch': {'name': hrm.pitch.name, 'object': hrm.pitch},
-               #'hrm_y': {'name': hrm.y.name, 'object': hrm.y},
                'huber_stage_y': {'name': huber_stage.y.name,  'description':'B2 Huber Stage Y','object': huber_stage.y},
                'huber_stage_pitch': {'name': huber_stage.pitch.name, 'description':'B2 Huber Stage Pitch','object': huber_stage.pitch},
                'huber_stage_z': {'name': huber_stage.z.name, 'description':'B2 Huber Stage Z','object': huber_stage.z},
@@ -64,41 +58,37 @@ motors_dictionary = {'slits_v_gap': {'name': slits.v_gap.name, 'description':'B1
 #                  {'x': samplexy.x.name, 'y': samplexy.y.name},
 #                  {'x': huber_stage.z.name, 'y': huber_stage.y.name}]
 
-auto_tune = { 'pre_elements':[{'name' : bpm_fm.name,
-                               'motor' : bpm_fm.ins,
-                               'read_back' : bpm_fm.switch_insert,
-                               'tries' : 3,
-                               'value' : 1}
-                             ],
-              'post_elements':[{'name' : bpm_fm.name,
-                                'motor' : bpm_fm.ret,
-                                'read_back' : bpm_fm.switch_retract,
-                                'tries' : 3,
-                                'value' : 1}
-                              ],
-              'elements':[{'name' : hhm.pitch.name,
-                           'object' : hhm.pitch,
-                           'scan_range' : 5,
-                           'step_size' : 0.025,#0.25,
-                           'max_retries' : 3,#1,
-                           'detector_name' : bpm_fm.name,
-                           'detector_signame' : bpm_fm.stats1.total.name},
-                           {'name' : hhm.y.name,
-                           'object' : hhm.y,
-                           'scan_range' : 1,
-                           'step_size' : 0.025,#0.25,
-                           'max_retries' : 3,#1,s
-                           'detector_name' : bpm_fm.name,
-                           'detector_signame' : bpm_fm.stats1.total.name},
-                           {'name' : hhrm.y.name,
-                           'object' : hhrm.y,
-                           'scan_range' : 3,
-                           'step_size' : 0.1,#0.25,
-                           'max_retries' : 3,#1,
-                           'detector_name' : i0.dev_name.value,
-                           'detector_signame' : i0.volt.name}
-                          ]
-           }
+tune_elements = [
+                {'detector': 'bpm_fm',
+                 'motor':'hhm_pitch',
+                 'range': 5,
+                 'step': 0.2,
+                 'retries': 10,
+                 'comment':'tuning second crystal pitch'
+                 },
+                {'detector': 'bpm_fm',
+                 'motor': 'hhm_pitch',
+                 'range': 1,
+                 'step': 0.025,
+                 'retries': 3,
+                 'comment': 'tuning second crystal pitch'
+                 },
+                {'detector': 'bpm_fm',
+                 'motor': 'hhm_y',
+                 'range': 1,
+                 'step': 0.025,
+                 'retries': 3,
+                 'comment': 'tuning second crystal height'
+                 },
+                {'detector': 'pba1_adc7',
+                 'motor': 'hhrm_y',
+                 'range': 3,
+                 'step': 0.1,
+                 'retries': 3,
+                 'comment': 'tuning harmonics rejection mirror height'
+                 },
+            ]
+
 
 shutters_dictionary = collections.OrderedDict([(shutter_fe.name, shutter_fe),
                                          (shutter_ph.name, shutter_ph),
@@ -141,7 +131,7 @@ xlive_gui = xlive.XliveGui(plan_funcs={
                            det_dict=detector_dictionary,
                            motors_dict=motors_dictionary,
                            sample_stage = giantxy,
-                           auto_tune_elements = auto_tune,
+                           tune_elements = tune_elements,
                            ic_amplifiers = ic_amplifiers,
                            processing_sender = sender,
                            job_submitter=job_submitter,

@@ -806,11 +806,11 @@ def set_gains_plan(*args):
         print('set amplifier gain for {}: {}, {}'.format(ic.par.dev_name.value, val, hs))
 
 
-def tuning_scan(motor, detector, channel, scan_range, scan_step, n_tries = 3, **kwargs):
+def tuning_scan(motor, detector, channel, scan_range, scan_step, retries = 3, **kwargs):
     sys.stdout = kwargs.pop('stdout', sys.stdout)
 
     channel = f'{detector.name}_{channel}'
-    for jj in range(n_tries):
+    for jj in range(retries):
         motor_init_position = motor.read()[motor.name]['value']
         min_limit = motor_init_position - scan_range / 2
         max_limit = motor_init_position + scan_range / 2 + scan_step / 2
@@ -828,19 +828,18 @@ def tuning_scan(motor, detector, channel, scan_range, scan_step, n_tries = 3, **
         elif detector.polarity == 'neg':
             idx = getattr(hdr.table()[channel], 'idxmin')()
         motor_pos = hdr.table()[motor.name][idx]
-        print(f'New motor position {motor_pos}')
+        print(f'[Tuning] New motor position {motor_pos}')
 
         if motor_pos < min_threshold:
 
             yield from bps.mv(motor,min_limit)
-            if jj+1 < n_tries:
-                print(f' Starting {jj+2} try')
+            if jj+1 < retries:
+                print(f' [Tuning] Starting {jj+2} retry')
         elif max_threshold < motor_pos:
             print('max')
-            if jj+1 < n_tries:
-                print(f' Starting {jj+2} try')
+            if jj+1 < retries:
+                print(f' [Tuning] Starting {jj+2} retry')
             yield from bps.mv(motor, max_limit)
         else:
-            print('move to point')
             yield from bps.mv(motor, motor_pos)
             break
