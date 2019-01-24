@@ -116,3 +116,11 @@ print("MD handling complete in {} sec".format(stop - start))
 ROOT_PATH = '/nsls2/xf08id'
 RAW_FILEPATH = 'data'
 USER_FILEPATH = 'users'
+
+
+# This kicks off the interpolation processing.
+# Added by Dan, Chanaka, Maksim in prototyping.
+from bluesky.callbacks.zmq import Publisher
+
+publisher = Publisher('localhost:5577', prefix=b'raw')
+RE.subscribe(publisher)
