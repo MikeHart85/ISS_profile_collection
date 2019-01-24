@@ -207,6 +207,14 @@ class EncoderFS(Encoder):
         #while not os.path.isfile(self._full_path):
         #    ttime.sleep(.1)
 
+        # FIXME: beam line disaster fix.
+        # Let's move the file to the correct place
+        workstation_file_root = '/mnt/xf08ida-ioc1/'
+        workstation_full_path = os.path.join(workstation_file_root, self._filename)
+        print('Moving file from {} to {}'.format(workstation_full_path, self._full_path))
+        cp_stat = shutil.copy(workstation_full_path, self._full_path)
+
+
         # HACK: Make datum documents here so that they are available for collect_asset_docs
         # before collect() is called. May need changes to RE to do this properly. - Dan A.
         with open(self._full_path, 'r') as f:
@@ -235,15 +243,6 @@ class EncoderFS(Encoder):
         # in the text file.
         now = ttime.time()
         ttime.sleep(1)  # wait for file to be written by pizza box
-
-        workstation_file_root = '/mnt/xf08ida-ioc1/'
-        workstation_full_path = os.path.join(workstation_file_root, self._filename)
-
-
-        # FIXME: beam line disaster fix.
-        # Let's move the file to the correct place
-        print('Moving file from {} to {}'.format(workstation_full_path, self._full_path))
-        cp_stat = shutil.copy(workstation_full_path, self._full_path)
 
         for datum_id in self._datum_ids:
             data = {self.name: datum_id}
@@ -378,6 +377,13 @@ class DIFS(DigitalInput):
         #while not os.path.isfile(self._full_path):
         #    ttime.sleep(.1)
 
+        # FIXME: beam line disaster fix.
+        # Let's move the file to the correct place
+        workstation_file_root = '/mnt/xf08ida-ioc1/'
+        workstation_full_path = os.path.join(workstation_file_root, self._filename)
+        print('Moving file from {} to {}'.format(workstation_full_path, self._full_path))
+        cp_stat = shutil.copy(workstation_full_path, self._full_path)
+
         # HACK: Make datum documents here so that they are available for collect_asset_docs
         # before collect() is called. May need changes to RE to do this properly. - Dan A.
         with open(self._full_path, 'r') as f:
@@ -407,14 +413,6 @@ class DIFS(DigitalInput):
         now = ttime.time()
         ttime.sleep(1)  # wait for file to be written by pizza box
 
-        workstation_file_root = '/mnt/xf08ida-ioc1/'
-        workstation_full_path = os.path.join(workstation_file_root, self._filename)
-
-
-        # FIXME: beam line disaster fix.
-        # Let's move the file to the correct place
-        print('Moving file from {} to {}'.format(workstation_full_path, self._full_path))
-        cp_stat = shutil.copy(workstation_full_path, self._full_path)
 
         for datum_id in self._datum_ids:
             data = {self.name: datum_id}
@@ -605,6 +603,13 @@ class AdcFS(Adc):
         # Stop adding new data to the file.
         set_and_wait(self.enable_sel, 1)
 
+        # FIXME: beam line disaster fix.
+        # Let's move the file to the correct place
+        workstation_file_root = '/mnt/xf08idb-ioc1/'
+        workstation_full_path = os.path.join(workstation_file_root, self._filename)
+        print('Moving file from {} to {}'.format(workstation_full_path, self._full_path))
+        stat = shutil.copy(workstation_full_path, self._full_path)
+
         # HACK: Make datum documents here so that they are available for collect_asset_docs
         # before collect() is called. May need changes to RE to do this properly. - Dan A.
         with open(self._full_path, 'r') as f:
@@ -633,14 +638,6 @@ class AdcFS(Adc):
         # in the text file.
         now = ttime.time()
         ttime.sleep(1)  # wait for file to be written by pizza box
-
-        workstation_file_root = '/mnt/xf08idb-ioc1/'
-        workstation_full_path = os.path.join(workstation_file_root, self._filename)
-
-        # FIXME: beam line disaster fix.
-        # Let's move the file to the correct place
-        print('Moving file from {} to {}'.format(workstation_full_path, self._full_path))
-        stat = shutil.copy(workstation_full_path, self._full_path)
 
         for datum_id in self._datum_ids:
             data = {self.name: datum_id}
