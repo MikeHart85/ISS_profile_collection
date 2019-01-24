@@ -206,6 +206,20 @@ class EncoderFS(Encoder):
         set_and_wait(self.ignore_sel, 1)
         #while not os.path.isfile(self._full_path):
         #    ttime.sleep(.1)
+
+        # HACK: Make datum documents here so that they are available for collect_asset_docs
+        # before collect() is called. May need changes to RE to do this properly. - Dan A.
+        with open(self._full_path, 'r') as f:
+            linecount = len(list(f))
+        chunk_count = linecount // self.chunk_size + int(linecount % self.chunk_size != 0)
+        self._datum_ids = []
+        for chunk_num in range(chunk_count):
+            datum_id = '{}/{}'.format(self._resource_uid,  next(self._datum_counter))
+            datum = {'resource': self._resource_uid,
+                     'datum_kwargs': {'chunk_num': chunk_num},
+                     'datum_id': datum_id}
+            self._asset_docs_cache.append(('datum', datum))
+        self._datum_ids.append(datum_id)
         return NullStatus()
 
     def collect(self):
@@ -231,24 +245,12 @@ class EncoderFS(Encoder):
         print('Moving file from {} to {}'.format(workstation_full_path, self._full_path))
         cp_stat = shutil.copy(workstation_full_path, self._full_path)
 
-        if os.path.isfile(self._full_path):
-            with open(self._full_path, 'r') as f:
-                linecount = len(list(f))
-            chunk_count = linecount // self.chunk_size + int(linecount % self.chunk_size != 0)
-            for chunk_num in range(chunk_count):
-                datum_id = '{}/{}'.format(self._resource_uid,  next(self._datum_counter))
-                datum = {'resource': self._resource_uid,
-                         'datum_kwargs': {'chunk_num': chunk_num},
-                         'datum_id': datum_id}
-                self._asset_docs_cache.append(('datum', datum))
-                data = {self.name: datum_id}
-                yield {'data': data,
-                       'timestamps': {key: now for key in data}, 'time': now,
-                       'filled': {key: False for key in data}}
-            print('Collect of {} complete'.format(self.name))
-
-        else:
-            print('Collect {}: File was not created'.format(self.name))
+        for datum_id in self._datum_ids:
+            data = {self.name: datum_id}
+            yield {'data': data,
+                   'timestamps': {key: now for key in data}, 'time': now,
+                   'filled': {key: False for key in data}}
+        print('Collect of {} complete'.format(self.name))
 
     def describe_collect(self):
         # TODO Return correct shape (array dims)
@@ -375,6 +377,20 @@ class DIFS(DigitalInput):
         set_and_wait(self.ignore_sel, 1)
         #while not os.path.isfile(self._full_path):
         #    ttime.sleep(.1)
+
+        # HACK: Make datum documents here so that they are available for collect_asset_docs
+        # before collect() is called. May need changes to RE to do this properly. - Dan A.
+        with open(self._full_path, 'r') as f:
+            linecount = len(list(f))
+        chunk_count = linecount // self.chunk_size + int(linecount % self.chunk_size != 0)
+        self._datum_ids = []
+        for chunk_num in range(chunk_count):
+            datum_id = '{}/{}'.format(self._resource_uid,  next(self._datum_counter))
+            datum = {'resource': self._resource_uid,
+                     'datum_kwargs': {'chunk_num': chunk_num},
+                     'datum_id': datum_id}
+            self._asset_docs_cache.append(('datum', datum))
+        self._datum_ids.append(datum_id)
         return NullStatus()
 
     def collect(self):
@@ -400,24 +416,11 @@ class DIFS(DigitalInput):
         print('Moving file from {} to {}'.format(workstation_full_path, self._full_path))
         cp_stat = shutil.copy(workstation_full_path, self._full_path)
 
-        if os.path.isfile(self._full_path):
-            with open(self._full_path, 'r') as f:
-                linecount = len(list(f))
-            chunk_count = linecount // self.chunk_size + int(linecount % self.chunk_size != 0)
-            for chunk_num in range(chunk_count):
-                datum_id = '{}/{}'.format(self._resource_uid, next(self._datum_counter))
-                datum = {'resource': self._resource_uid,
-                         'datum_kwargs': {'chunk_num': chunk_num},
-                         'datum_id': datum_id}
-                self._asset_docs_cache.append(('datum', datum))
-                data = {self.name: datum_id}
-
-                yield {'data': data,
-                       'timestamps': {key: now for key in data}, 'time': now,
-                       'filled': {key: False for key in data}}
-            print('Collect of {} complete'.format(self.name))
-        else:
-            print('collect {}: File was not created'.format(self.name))
+        for datum_id in self._datum_ids:
+            data = {self.name: datum_id}
+            yield {'data': data,
+                   'timestamps': {key: now for key in data}, 'time': now,
+                   'filled': {key: False for key in data}}
 
     def describe_collect(self):
         # TODO Return correct shape (array dims)
@@ -601,6 +604,20 @@ class AdcFS(Adc):
             raise RuntimeError("must called kickoff() method before calling complete()")
         # Stop adding new data to the file.
         set_and_wait(self.enable_sel, 1)
+
+        # HACK: Make datum documents here so that they are available for collect_asset_docs
+        # before collect() is called. May need changes to RE to do this properly. - Dan A.
+        with open(self._full_path, 'r') as f:
+            linecount = len(list(f))
+        chunk_count = linecount // self.chunk_size + int(linecount % self.chunk_size != 0)
+        self._datum_ids = []
+        for chunk_num in range(chunk_count):
+            datum_id = '{}/{}'.format(self._resource_uid,  next(self._datum_counter))
+            datum = {'resource': self._resource_uid,
+                     'datum_kwargs': {'chunk_num': chunk_num},
+                     'datum_id': datum_id}
+            self._asset_docs_cache.append(('datum', datum))
+        self._datum_ids.append(datum_id)
         return NullStatus()
 
     def collect(self):
@@ -625,26 +642,11 @@ class AdcFS(Adc):
         print('Moving file from {} to {}'.format(workstation_full_path, self._full_path))
         stat = shutil.copy(workstation_full_path, self._full_path)
 
-        if os.path.isfile(self._full_path):
-            with open(self._full_path, 'r') as f:
-                linecount = 0
-                for ln in f:
-                    linecount += 1
-            chunk_count = linecount // self.chunk_size + int(linecount % self.chunk_size != 0)
-            for chunk_num in range(chunk_count):
-                datum_id = '{}/{}'.format(self._resource_uid, next(self._datum_counter))
-                datum = {'resource': self._resource_uid,
-                         'datum_kwargs': {'chunk_num': chunk_num},
-                         'datum_id': datum_id}
-                self._asset_docs_cache.append(('datum', datum))
-                data = {self.name: datum_id}
-
-                yield {'data': data,
-                       'timestamps': {key: now for key in data}, 'time': now,
-                       'filled': {key: False for key in data}}
-            print('Collect of {} complete'.format(self.name))
-        else:
-            print('collect {}: File was not created'.format(self.name))
+        for datum_id in self._datum_ids:
+            data = {self.name: datum_id}
+            yield {'data': data,
+                   'timestamps': {key: now for key in data}, 'time': now,
+                   'filled': {key: False for key in data}}
 
     def describe_collect(self):
         # TODO Return correct shape (array dims)
