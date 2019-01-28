@@ -3,7 +3,7 @@ import bluesky.plans as bp
 import bluesky.plan_stubs as bps
 import os, sys
 from bluesky.utils import FailedStatus
-from isstools.trajectory.trajectory import trajectory_manager
+
 
 
 def tscan(name: str, comment: str, n_cycles: int = 1, delay: float = 0, **kwargs):
@@ -49,11 +49,10 @@ def tscan(name: str, comment: str, n_cycles: int = 1, delay: float = 0, **kwargs
         # hhm.prepare_trajectory.put('1')
         # uids.append(uid)
         time.sleep(float(delay))
-    print('Scan is complete!')
     # return uids
 
 
-def tscan_plan(name: str, comment: str, n_cycles: int = 1, delay: float = 0, reference = True, **kwargs):
+def fly_scan(name: str, comment: str, n_cycles: int = 1, delay: float = 0, reference = True, **kwargs):
     '''
     Trajectory Scan - Runs the monochromator along the trajectory that is previously loaded in the controller N times
 
@@ -81,29 +80,27 @@ def tscan_plan(name: str, comment: str, n_cycles: int = 1, delay: float = 0, ref
     '''
 
     sys.stdout = kwargs.pop('stdout', sys.stdout)
-    print(print_now())
-
-    print('Running tscan_plan')
     uids = []
-    print(print_now())
 
     current_element = getattr(hhm, f'traj{int(hhm.lut_number_rbv.value)}').elem.value
-    yield from set_reference_foil(current_element)
+    try:
+        yield from set_reference_foil(current_element)
+    except:
+        pass
 
     for indx in range(int(n_cycles)):
-        name_n = '{} {:03d}'.format(name, indx + 1)
-        print(name_n)
+        name_n = '{} {:04d}'.format(name, indx + 1)
+        print(f'Filename is {name_n}')
 
         yield from prep_traj_plan()
         print(f'Trajectory prepared at {print_now()}')
 
         uid = (yield from execute_trajectory(name_n, comment=comment))
+
         uids.append(uid)
 
         print(f'Trajectory excecuted {print_now()}')
-
         yield from bps.sleep(float(delay))
-    print('Scan is complete!')
     return uids
 
 
@@ -153,7 +150,7 @@ def tscanxia(name: str, comment: str, n_cycles: int = 1, delay: float = 0, **kwa
     # return uids
 
 
-def tscanxia_plan(name: str, comment: str, n_cycles: int = 1, delay: float = 0, **kwargs):
+def fly_scan_with_sdd(name: str, comment: str, n_cycles: int = 1, delay: float = 0, **kwargs):
     """
     Trajectory Scan XIA - Runs the monochromator along the trajectory that is previously loaded in the controller and get data from the XIA N times
 
@@ -245,7 +242,7 @@ def tscancam(name: str, comment: str, n_cycles: int = 1, delay: float = 0, **kwa
     # return uids
 
 
-def tscancam_plan(name: str, comment: str, n_cycles: int = 1, delay: float = 0, **kwargs):
+def fly_scan_with_camera(name: str, comment: str, n_cycles: int = 1, delay: float = 0, **kwargs):
     """
     Trajectory Scan - Runs the monochromator along the trajectory that is previously loaded in the controller N times
 

@@ -8,10 +8,10 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from ophyd.sim import motor
 motor.move = motor.set
 
-print("took {} sec".format(time.time()-t1))
 
 
-detector_dictionary = {bpm_fm.name: {'obj': bpm_fm, 'elements': ['bpm_fm_stats1_total', 'bpm_fm_stats2_total'],'channels': ['stats1_total', 'stats2_total']},
+
+detector_dictionary = {bpm_fm.name: {'obj': bpm_fm, 'elements': ['bpm_fm_stats1_total', 'bpm_fm_stats2_total']},
             bpm_cm.name: {'obj': bpm_cm, 'elements': ['bpm_cm_stats1_total','bpm_cm_stats2_total']},
             bpm_bt1.name: {'obj': bpm_bt1, 'elements': ['bpm_bt1_stats1_total','bpm_bt1_stats2_total']},
             bpm_bt2.name: {'obj': bpm_bt2, 'elements':['bpm_bt2_stats1_total','bpm_bt2_stats2_total']},
@@ -19,12 +19,12 @@ detector_dictionary = {bpm_fm.name: {'obj': bpm_fm, 'elements': ['bpm_fm_stats1_
             pb9.enc1.name: {'obj': pb9.enc1, 'elements': ['pb9_enc1_pos_I']},
             it.name: {'obj': it, 'elements': ['pba1_adc1_volt']},
             iff.name: {'obj': iff, 'elements': ['pba1_adc6_volt']},
-            i0.name: {'obj': i0, 'elements': ['pba1_adc7_volt'],'channels': ['volt']},
+            i0.name: {'obj': i0, 'elements': ['pba1_adc7_volt'],'channels': ['']},
             ir.name: {'obj': ir, 'elements': ['pba2_adc6_volt']},
             pba2.adc7.name: {'obj': pba2.adc7, 'elements': ['pba2_adc7_volt']},
             xia1.name: {'obj': xia1, 'elements': xia_list}}
 
-motors_dictionary = {'slits_v_gap': {'name': slits.v_gap.name, 'description':'B1 Slit Vertical Gap','object': slits.v_gap},
+motor_dictionary = {'slits_v_gap': {'name': slits.v_gap.name, 'description':'B1 Slit Vertical Gap','object': slits.v_gap},
                'slits_v_pos': {'name': slits.v_pos.name, 'description':'B1 Slit Vertical Position','object': slits.v_pos},
                'slits_hor_in': {'name': slits.hor_in.name,'description':'B1 Slit Horisontal Inboard Position', 'object': slits.hor_in},
                'slits_hor_out': {'name': slits.hor_out.name,'description':'B1 Slit Horisontal Outboard Position', 'object': slits.hor_out},
@@ -37,9 +37,15 @@ motors_dictionary = {'slits_v_gap': {'name': slits.v_gap.name, 'description':'B1
                'hhm_y': {'name': hhm.y.name,'description':'A Monochromator Y', 'object': hhm.y},
                'hhm_pitch': {'name': hhm.pitch.name, 'description':'A Monochromator Pitch','object': hhm.pitch},
                'hhm_roll': {'name': hhm.roll.name, 'description':'A Monochromator Roll', 'object': hhm.roll},
+               #'hhrm_yu': {'name': hhrm.yu.name, 'object': hhrm.yu},
+               #'hhrm_yd1': {'name': hhrm.yd1.name, 'object': hhrm.yd1},
+               #'hhrm_yd2': {'name': hhrm.yd2.name, 'object': hhrm.yd2},
                'hhrm_mir_pitch': {'name': hhrm.mir_pitch.name, 'description':'B1 HHR Mirror Pitch','object': hhrm.mir_pitch},
                'hhrm_table_pitch': {'name': hhrm.table_pitch.name, 'description':'B1 HHR Mirror Table Pitch','object': hhrm.table_pitch},
                'hhrm_y': {'name': hhrm.y.name, 'description':'B1 HHR Mirror Table Height','object': hhrm.y},
+               #'hrm_theta': {'name': hrm.theta.name, 'object': hrm.theta},
+               #'hrm_pitch': {'name': hrm.pitch.name, 'object': hrm.pitch},
+               #'hrm_y': {'name': hrm.y.name, 'object': hrm.y},
                'huber_stage_y': {'name': huber_stage.y.name,  'description':'B2 Huber Stage Y','object': huber_stage.y},
                'huber_stage_pitch': {'name': huber_stage.pitch.name, 'description':'B2 Huber Stage Pitch','object': huber_stage.pitch},
                'huber_stage_z': {'name': huber_stage.z.name, 'description':'B2 Huber Stage Z','object': huber_stage.z},
@@ -58,39 +64,36 @@ motors_dictionary = {'slits_v_gap': {'name': slits.v_gap.name, 'description':'B1
 #                  {'x': samplexy.x.name, 'y': samplexy.y.name},
 #                  {'x': huber_stage.z.name, 'y': huber_stage.y.name}]
 
-tune_elements = [
-                {'detector': 'bpm_fm',
-                 'motor':'hhm_pitch',
-                 'range': 5,
-                 'step': 0.2,
-                 'retries': 10,
-                 'comment':'tuning second crystal pitch'
-                 },
-                {'detector': 'bpm_fm',
-                 'motor': 'hhm_pitch',
-                 'range': 1,
-                 'step': 0.025,
-                 'retries': 3,
-                 'comment': 'tuning second crystal pitch'
-                 },
-                {'detector': 'bpm_fm',
-                 'motor': 'hhm_y',
-                 'range': 1,
-                 'step': 0.025,
-                 'retries': 3,
-                 'comment': 'tuning second crystal height'
-                 },
-                {'detector': 'pba1_adc7',
-                 'motor': 'hhrm_y',
-                 'range': 3,
-                 'step': 0.1,
-                 'retries': 3,
-                 'comment': 'tuning harmonics rejection mirror height'
-                 },
-            ]
+tune_elements =  [{'motor': hhm.pitch.name,
+                   'detector': bpm_fm.name,
+                   'range': 10,
+                   'step': 0.1,
+                   'retries': 10,
+                   'comment': 'rough monochromator pitch tune'},
+                  {'motor': hhm.pitch.name,
+                   'detector': bpm_fm.name,
+                   'range': 1,
+                   'step': 0.02,
+                   'retries': 3,
+                   'comment': 'fine monochromator pitch tune'},
+                  {'motor': hhm.y.name,
+                   'detector': bpm_fm.name,
+                   'range': 1,
+                   'step': 0.025,
+                   'retries': 3,
+                   'comment': 'monochromator crystal distance tune'},
+                  {'motor': hhrm.y.name,
+                   'detector': i0.name,
+                   'range': 1,
+                   'step': 0.025,
+                   'retries': 3,
+                   'comment': 'Harmonic regection mirror tune'},
+
+                  ]
 
 
-shutters_dictionary = collections.OrderedDict([(shutter_fe.name, shutter_fe),
+
+shutter_dictionary = collections.OrderedDict([(shutter_fe.name, shutter_fe),
                                          (shutter_ph.name, shutter_ph),
                                          (shutter.name, shutter)])
 
@@ -100,17 +103,17 @@ ic_amplifiers = {'i0_amp': i0_amp,
                  'iff_amp': iff_amp}
 
 xlive_gui = xlive.XliveGui(plan_funcs={
-                                'tscan_plan':       tscan_plan,
-                                'tscanxia_plan':    tscanxia_plan,
-                                'tscancam_plan':    tscancam_plan,
+                                'Fly scan':       fly_scan,
+                                'Fly scan with SDD':    fly_scan_with_sdd,
+                                'Fly scan with Area Detector':    fly_scan_with_camera,
                            },
                            service_plan_funcs={
-                                'get_adc_offsets': get_adc_offsets,
-                                'sleep':             sleep,
-                                'random_step':      random_step,
+                                'get_adc_offsets':  get_adc_offsets,
+                                'sleep':                   sleep,
+                                'random_step':          random_step,
                                 'set_gains':        set_gains,
                                 'adjust_ic_gains': adjust_ic_gains,
-                                'prepare_bl_plan': prepare_bl_plan,
+                                'prepare_beamline_plan': prepare_beamline_plan,
 
                            },
                            aux_plan_funcs ={
@@ -127,17 +130,13 @@ xlive_gui = xlive.XliveGui(plan_funcs={
                            db = db,
                            accelerator = nsls_ii,
                            hhm = hhm,
-                           shutters_dict =shutters_dictionary,
+                           shutters_dict =shutter_dictionary,
                            det_dict=detector_dictionary,
-                           motors_dict=motors_dictionary,
+                           motors_dict=motor_dictionary,
                            sample_stage = giantxy,
                            tune_elements = tune_elements,
                            ic_amplifiers = ic_amplifiers,
-                           processing_sender = sender,
-                           job_submitter=job_submitter,
-                           bootstrap_servers=['cmb01:9092', 'cmb02:9092'],
-                           kafka_topic="iss-processing",
-                           window_title="XLive @ISS/08-ID NSLS-II",
+                           window_title="XLive @ISS/08-ID NSLS-II Development",
                            )
 
 
@@ -168,15 +167,13 @@ sys.stderr = xlive_gui.emitstream_err
 
 #atexit.register(cleaning)
 
-from isstools.xasdata.xasdata_lite import xasdata_load_dataset_from_files, xasdata_bin_dataset, xasdata_interpolate_dataset
 
-
-def load():
-    start = timer()
-    uid = db[-1]['start']['uid']
-    aa = xasdata_load_dataset_from_files(db, uid)
-    print(f'took {timer()-start}')
-    return aa
+#
+# def load():
+#     uid = db[-1]['start']['uid']
+#     aa = xasdata_load_dataset_from_files(db, uid)
+#     print(f'took {timer()-start}')
+#     return aa
 
 
 

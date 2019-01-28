@@ -3,10 +3,10 @@ from datetime import datetime
 from subprocess import call
 import time
 from scipy.optimize import curve_fit
-from isstools.xasdata import xasdata
 from bluesky.plan_stubs import mv, mvr
 import bluesky.preprocessors as bpp
 from random import random
+from xas.trajectory import trajectory_manager
 
 
 def remove_pb_files(uid):
@@ -166,13 +166,11 @@ def generate_tune_table(motor=hhm.energy, start_energy=5000, stop_energy=13000, 
         tune_mono_pitch(2, 0.025)
         tune_mono_y(0.5, 0.01)
         table.append([energy, hhm.pitch.read()['hhm_pitch']['value'], hhm.y.read()['hhm_y']['value']])
-
     return table
 
 
 
 def set_reference_foil(element = None):
-
     # Adding reference foil element list
     with open('/nsls2/xf08id/settings/json/foil_wheel.json') as fp:
         reference_foils = json.load(fp)

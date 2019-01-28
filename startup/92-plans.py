@@ -114,7 +114,8 @@ def tune(detectors, motor, start, stop, num, name='', **metadata):
 
     yield from plan
 
-def get_xia_energy_grid(e0, preedge_start, xanes_start, xanes_end, exafs_end, preedge_spacing, xanes_spacing, exafsk_spacing, int_time_preedge = 1, int_time_xanes = 1, int_time_exafs = 1, k_power = 0):
+def get_xia_energy_grid(e0, preedge_start, xanes_start, xanes_end, exafs_end, preedge_spacing,
+                        xanes_spacing, exafsk_spacing, int_time_preedge = 1, int_time_xanes = 1, int_time_exafs = 1, k_power = 0):
     preedge = np.arange(e0 + preedge_start, e0 + xanes_start, preedge_spacing)
     preedge_int = np.ones(len(preedge)) * int_time_preedge
 
@@ -242,7 +243,6 @@ def sampleXY_plan(detectors, motor, start, stop, num):
 
 
 def pb_scan_plan(detectors, motor, scan_center, scan_range, name = ''):
-
     flyers = detectors
     def inner():
         md = {'plan_args': {}, 'plan_name': 'pb_scan','experiment': 'pb_scan', 'name': name}
@@ -321,7 +321,6 @@ def prep_traj_plan(delay = 0.1):
         print('>12000')
         yield from bps.mv(hhm.energy, curr_energy + 100)
         yield from bps.sleep(1)
-        print('1')
         yield from bps.mv(hhm.energy, curr_energy)
 
 
@@ -341,14 +340,15 @@ def execute_trajectory(name, **metadata):
     #flyers = [pba2.adc7, pba1.adc6, pb9.enc1, pba1.adc1, pba2.adc6, pba1.adc7]
     flyers = [pba2.adc7, pba1.adc6, pba1.adc1, pba2.adc6, pba1.adc7, pb9.enc1]
     def inner():
-        interp_fn = f"{ROOT_PATH}/{USER_FILEPATH}/{RE.md['year']}.{RE.md['cycle']}.{RE.md['PROPOSAL']}/{name}.txt"
+        interp_fn = f"{ROOT_PATH}/{USER_FILEPATH}/{RE.md['year']}/{RE.md['cycle']}/{RE.md['PROPOSAL']}/{name}.raw"
         curr_traj = getattr(hhm, 'traj{:.0f}'.format(hhm.lut_number_rbv.value))
-
-        full_element_name = getattr(elements, curr_traj.elem.value).name.capitalize()
-
+        try:
+            full_element_name = getattr(elements, curr_traj.elem.value).name.capitalize()
+        except:
+            full_element_name = curr_traj.elem.value
         md = {'plan_args': {},
-              'plan_name': 'execute_trajectory1',
-              'experiment': 'transmission',
+              'plan_name': 'execute_trajectory',
+              'experiment': 'fly_energy_scan',
               'name': name,
               'interp_filename': interp_fn,
               'angle_offset': str(hhm.angle_offset.value),
@@ -360,14 +360,14 @@ def execute_trajectory(name, **metadata):
               'pulses_per_degree': hhm.pulses_per_deg,
 }
         for flyer in flyers:
-            print(f'Flyer is {flyer}')
+            #print(f'Flyer is {flyer}')
             if hasattr(flyer, 'offset'):
                 md['{} offset'.format(flyer.name)] = flyer.offset.value
             if hasattr(flyer, 'amp'):
-                print('has gain')
                 md['{} gain'.format(flyer.name)]= flyer.amp.get_gain()[0]
         md.update(**metadata)
         yield from bps.open_run(md=md)
+        #print(f'==== ret (open run): {ret}')
 
         # TODO Replace this with actual status object logic.
         yield from bps.clear_checkpoint()
@@ -402,14 +402,15 @@ def execute_trajectory(name, **metadata):
                 else:
                     break
 
-        yield from bpp.finalize_wrapper(poll_the_traj_plan(), 
-                                       bpp.pchain(shutter.close_plan(), 
-                                                 bps.abs_set(hhm.stop_trajectory, 
-                                                            '1', wait=True)))
-        #print('moving back')
-        #hhm.prepare_trajectory.put('1')
-        #print('should be done')
-        yield from bps.close_run()
+        yield from bpp.finalize_wrapper(poll_the_traj_plan(),
+                                         bpp.pchain(shutter.close_plan(),
+                                                    bps.abs_set(hhm.stop_trajectory,
+                                                    '1', wait=True)))
+
+        ret = yield from bps.close_run()
+        #print(f'==== ret2 (close run): {ret2}')
+
+        return ret
 
     def final_plan():
         yield from bps.abs_set(hhm.trajectory_running, 0, wait=True)
@@ -424,17 +425,17 @@ def execute_trajectory(name, **metadata):
 
     yield from bps.stage(hhm)
     fly_plan = bpp.fly_during_wrapper(bpp.finalize_wrapper(inner(), final_plan()),
-                                              flyers)
+                                      flyers)
     # TODO : Add in when suspend_wrapper is avaialable
     #if not ignore_shutter:
         # this will use suspenders defined in 23-suspenders.py
         #fly_plan = bpp.suspend_wrapper(fly_plan, suspenders)
 
-    yield from fly_plan
+    return (yield from fly_plan)
+
 
 
 def execute_camera_trajectory(name, **metadata):
-    #flyers = [pb4.di, pba2.adc7, pba1.adc6, pb9.enc1, pba1.adc1, pba2.adc6, pba1.adc7]
     flyers = [pb4.di, pba2.adc7, pba1.adc6, pb9.enc1, pba1.adc1, pba1.adc7]
     def inner():
         curr_traj = getattr(hhm, 'traj{:.0f}'.format(hhm.lut_number_rbv.value))
@@ -806,11 +807,11 @@ def set_gains_plan(*args):
         print('set amplifier gain for {}: {}, {}'.format(ic.par.dev_name.value, val, hs))
 
 
-def tuning_scan(motor, detector, channel, scan_range, scan_step, retries = 3, **kwargs):
+def tuning_scan(motor, detector, scan_range, scan_step, n_tries = 3, **kwargs):
     sys.stdout = kwargs.pop('stdout', sys.stdout)
 
-    channel = f'{detector.name}_{channel}'
-    for jj in range(retries):
+    channel = detector.hints['fields'][0]
+    for jj in range(n_tries):
         motor_init_position = motor.read()[motor.name]['value']
         min_limit = motor_init_position - scan_range / 2
         max_limit = motor_init_position + scan_range / 2 + scan_step / 2
@@ -828,17 +829,16 @@ def tuning_scan(motor, detector, channel, scan_range, scan_step, retries = 3, **
         elif detector.polarity == 'neg':
             idx = getattr(hdr.table()[channel], 'idxmin')()
         motor_pos = hdr.table()[motor.name][idx]
-        print(f'[Tuning] New motor position {motor_pos}')
+        print(f'New motor position {motor_pos}')
 
         if motor_pos < min_threshold:
-
             yield from bps.mv(motor,min_limit)
-            if jj+1 < retries:
-                print(f' [Tuning] Starting {jj+2} retry')
+            if jj+1 < n_tries:
+                print(f' Starting {jj+2} try')
         elif max_threshold < motor_pos:
             print('max')
-            if jj+1 < retries:
-                print(f' [Tuning] Starting {jj+2} retry')
+            if jj+1 < n_tries:
+                print(f' Starting {jj+2} try')
             yield from bps.mv(motor, max_limit)
         else:
             yield from bps.mv(motor, motor_pos)
