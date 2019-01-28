@@ -169,10 +169,10 @@ class EncoderFS(Encoder):
             self.filepath.put(self._ioc_full_path)
 
             self._resource_uid = str(uuid.uuid4())
-            resource = {'spec': 'PIZZABOX_ENC_FILE_TXT',
+            resource = {'spec': 'PIZZABOX_ENC_FILE_TXT_PD',
                         'root': ROOT_PATH,
                         'resource_path': full_path,
-                        'resource_kwargs': {'chunk_size': self.chunk_size},
+                        'resource_kwargs': {},
                         'path_semantics': os.name,
                         'uid': self._resource_uid}
             self._asset_docs_cache.append(('resource', resource))
@@ -217,17 +217,17 @@ class EncoderFS(Encoder):
 
         # HACK: Make datum documents here so that they are available for collect_asset_docs
         # before collect() is called. May need changes to RE to do this properly. - Dan A.
-        with open(self._full_path, 'r') as f:
-            linecount = len(list(f))
-        chunk_count = linecount // self.chunk_size + int(linecount % self.chunk_size != 0)
+
         self._datum_ids = []
-        for chunk_num in range(chunk_count):
-            datum_id = '{}/{}'.format(self._resource_uid,  next(self._datum_counter))
-            datum = {'resource': self._resource_uid,
-                     'datum_kwargs': {'chunk_num': chunk_num},
-                     'datum_id': datum_id}
-            self._asset_docs_cache.append(('datum', datum))
+
+        datum_id = '{}/{}'.format(self._resource_uid,  next(self._datum_counter))
+        datum = {'resource': self._resource_uid,
+                 'datum_kwargs': {},
+                 'datum_id': datum_id}
+        self._asset_docs_cache.append(('datum', datum))
+
         self._datum_ids.append(datum_id)
+
         return NullStatus()
 
     def collect(self):
@@ -259,7 +259,7 @@ class EncoderFS(Encoder):
                       'devname': self.dev_name.value,
                       'source': 'pizzabox-enc-file',
                       'external': 'FILESTORE:',
-                      'shape': [1024, 5],
+                      'shape': [-1, -1],
                       'dtype': 'array'}}}
 
 
@@ -340,10 +340,10 @@ class DIFS(DigitalInput):
         self.filepath.put(self._ioc_full_path)
 
         self._resource_uid = str(uuid.uuid4())
-        resource = {'spec': 'PIZZABOX_DI_FILE_TXT',
+        resource = {'spec': 'PIZZABOX_DI_FILE_TXT_PD',
                     'root': root_path,
                     'resource_path': full_path,
-                    'resource_kwargs': {'chunk_size': self.chunk_size},
+                    'resource_kwargs': {},
                     'path_semantics': os.name,
                     'uid': self._resource_uid}
         self._asset_docs_cache.append(('resource', resource))
@@ -386,16 +386,14 @@ class DIFS(DigitalInput):
 
         # HACK: Make datum documents here so that they are available for collect_asset_docs
         # before collect() is called. May need changes to RE to do this properly. - Dan A.
-        with open(self._full_path, 'r') as f:
-            linecount = len(list(f))
-        chunk_count = linecount // self.chunk_size + int(linecount % self.chunk_size != 0)
         self._datum_ids = []
-        for chunk_num in range(chunk_count):
-            datum_id = '{}/{}'.format(self._resource_uid,  next(self._datum_counter))
-            datum = {'resource': self._resource_uid,
-                     'datum_kwargs': {'chunk_num': chunk_num},
-                     'datum_id': datum_id}
-            self._asset_docs_cache.append(('datum', datum))
+
+        datum_id = '{}/{}'.format(self._resource_uid,  next(self._datum_counter))
+        datum = {'resource': self._resource_uid,
+                 'datum_kwargs': {},
+                 'datum_id': datum_id}
+        self._asset_docs_cache.append(('datum', datum))
+
         self._datum_ids.append(datum_id)
         return NullStatus()
 
@@ -565,10 +563,10 @@ class AdcFS(Adc):
             self.filepath.put(self._ioc_full_path)
 
             self._resource_uid = str(uuid.uuid4())
-            resource = {'spec': 'PIZZABOX_AN_FILE_TXT',
+            resource = {'spec': 'PIZZABOX_AN_FILE_TXT_PD',
                         'root': ROOT_PATH,
                         'resource_path': full_path,
-                        'resource_kwargs': {'chunk_size': self.chunk_size},
+                        'resource_kwargs': {},
                         'path_semantics': os.name,
                         'uid': self._resource_uid}
             self._asset_docs_cache.append(('resource', resource))
@@ -612,16 +610,13 @@ class AdcFS(Adc):
 
         # HACK: Make datum documents here so that they are available for collect_asset_docs
         # before collect() is called. May need changes to RE to do this properly. - Dan A.
-        with open(self._full_path, 'r') as f:
-            linecount = len(list(f))
-        chunk_count = linecount // self.chunk_size + int(linecount % self.chunk_size != 0)
         self._datum_ids = []
-        for chunk_num in range(chunk_count):
-            datum_id = '{}/{}'.format(self._resource_uid,  next(self._datum_counter))
-            datum = {'resource': self._resource_uid,
-                     'datum_kwargs': {'chunk_num': chunk_num},
-                     'datum_id': datum_id}
-            self._asset_docs_cache.append(('datum', datum))
+        datum_id = '{}/{}'.format(self._resource_uid,  next(self._datum_counter))
+        datum = {'resource': self._resource_uid,
+                 'datum_kwargs': {},
+                 'datum_id': datum_id}
+        self._asset_docs_cache.append(('datum', datum))
+
         self._datum_ids.append(datum_id)
         return NullStatus()
 
@@ -741,3 +736,40 @@ db.reg.register_handler('PIZZABOX_ENC_FILE_TXT',
                         PizzaBoxEncHandlerTxt, overwrite=True)
 db.reg.register_handler('PIZZABOX_DI_FILE_TXT',
                         PizzaBoxDIHandlerTxt, overwrite=True)
+
+
+
+
+# New handlers to support reading files into a Pandas dataframe
+class PizzaBoxAnHandlerTxtPD:
+    "Read PizzaBox text files using info from filestore."
+    def __init__(self, fpath):
+        self.df = pd.read_table(fpath, names=['ts_s', 'ts_ns', 'index', 'adc'], sep=' ')
+
+    def __call__(self):
+        return self.df
+
+class PizzaBoxDIHandlerTxtPD:
+    "Read PizzaBox text files using info from filestore."
+    def __init__(self, fpath):
+        self.df = pd.read_table(fpath, names=['ts_s', 'ts_ns', 'encoder', 'index', 'di'], sep=' ')
+
+    def __call__(self):
+        return self.df
+
+class PizzaBoxEncHandlerTxtPD:
+    "Read PizzaBox text files using info from filestore."
+    def __init__(self, fpath):
+        self.df = pd.read_table(fpath, names=['ts_s', 'ts_ns', 'encoder', 'index', 'state'], sep=' ')
+
+    def __call__(self):
+        return self.df
+
+
+db.reg.register_handler('PIZZABOX_AN_FILE_TXT_PD',
+                        PizzaBoxAnHandlerTxtPD, overwrite=True)
+db.reg.register_handler('PIZZABOX_DI_FILE_TXT_PD',
+                        PizzaBoxDIHandlerTxtPD, overwrite=True)
+db.reg.register_handler('PIZZABOX_ENC_FILE_TXT_PD',
+                        PizzaBoxEncHandlerTxtPD, overwrite=True)
+
