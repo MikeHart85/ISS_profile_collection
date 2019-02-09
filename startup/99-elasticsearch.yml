@@ -12,6 +12,7 @@ databroker-elasticsearch:
     - [e0]
     - [edge]
     - [element]
+    - [element_full]
     - [experiment]
     - [group]
     - [name]

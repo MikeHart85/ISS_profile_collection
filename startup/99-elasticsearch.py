@@ -16,7 +16,7 @@ _esconfig = os.path.splitext(__file__)[0] + '.yml'
 escb = databroker_elasticsearch.load_callback(_esconfig)
 
 # activate the callback
-#RE.subscribe(escb)
+RE.subscribe(escb)
 
 # define top-level function for ES query
 def esqsearch(q, **kwargs):
