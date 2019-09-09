@@ -260,7 +260,7 @@ def execute_xia_trajectory(name, **metadata):
             full_element_name = curr_traj.elem.value
         md = {'plan_args': {},
               'plan_name': 'execute_xia_trajectory',
-              'experiment': 'fluorescence_sdd',
+              'experiment': 'fly_energy_scan_with_xia',
               'name': name,
               'interp_filename': interp_fn,
               'xia_max_energy': xia1.mca_max_energy.value,
