@@ -236,8 +236,15 @@ def execute_xia_trajectory(name, **metadata):
 
     def inner():
         # Setting the name of the file
-        xia1.netcdf_filename.put(name)
-        next_file_number = xia1.netcdf_filenumber_rb.value
+
+        interp_fn = f"{ROOT_PATH}/{USER_FILEPATH}/{RE.md['year']}/{RE.md['cycle']}/{RE.md['PROPOSAL']}/{name}.raw"
+        interp_fn = validate_file_exists(interp_fn)
+        xia_fn = f'/NAS/{name}.nc'
+        xia_fn = validate_file_exists(xia_fn)
+
+
+        xia1.netcdf_filename.put(os.path.splitext(os.path.basename(xia_fn))[0] )
+        #next_file_number = xia1.netcdf_filenumber_rb.value
 
         xia_rois = {}
         max_energy = xia1.mca_max_energy.value
@@ -252,7 +259,6 @@ def execute_xia_trajectory(name, **metadata):
                         xia_rois[roi.high.name] = roi.high.value * max_energy / 2048
                         xia_rois[roi.low.name] = roi.low.value * max_energy / 2048
 
-        interp_fn = f"{ROOT_PATH}/{USER_FILEPATH}/{RE.md['year']}.{RE.md['cycle']}.{RE.md['PROPOSAL']}/{name}.txt"
         curr_traj = getattr(hhm, 'traj{:.0f}'.format(hhm.lut_number_rbv.value))
         try:
             full_element_name = getattr(elements, curr_traj.elem.value).name.capitalize()
@@ -264,7 +270,7 @@ def execute_xia_trajectory(name, **metadata):
               'name': name,
               'interp_filename': interp_fn,
               'xia_max_energy': xia1.mca_max_energy.value,
-              'xia_filename': '{}_{:03}.nc'.format(name, next_file_number),
+              'xia_filename': xia_fn,
               'xia_rois': xia_rois,
               'angle_offset': str(hhm.angle_offset.value),
               'trajectory_name': hhm.trajectory_name.value,

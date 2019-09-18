@@ -1,10 +1,10 @@
-from isstools import xlive
+#from isstools import xlive
 
 import atexit
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
+'''
 
 # sample_stages = [{'x': giantxy.x.name, 'y': giantxy.y.name},
 #                  {'x': samplexy.x.name, 'y': samplexy.y.name},
@@ -74,7 +74,7 @@ sys.stderr = xlive_gui.emitstream_err
 
 #atexit.register(cleaning)
 
-
+'''
 
 
 
