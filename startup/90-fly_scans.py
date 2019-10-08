@@ -115,19 +115,12 @@ def fly_scan_with_sdd(name: str, comment: str, n_cycles: int = 1, delay: float =
     sys.stdout = kwargs.pop('stdout', sys.stdout)
 
     uids = []
-    for i in range(int(n_cycles)):
-        if n_cycles == 1:
-            name_n = name
-        else:
-            name_n = name + ' ' + str(i + 1)
-        print('Current step: {} / {}'.format(i + 1, n_cycles))
-        # RE(prep_traj_plan())
-        # uid, = RE(execute_xia_trajectory(name_n, comment=comment))
+    for indx in range(int(n_cycles)):
+        name_n = '{} {:04d}'.format(name, indx + 1)
+        print('Current step: {} / {}'.format(indx + 1, n_cycles))
         yield from prep_traj_plan()
-        # uid = (yield from execute_trajectory(name_n))
         uid = (yield from execute_xia_trajectory(name_n, comment=comment))
         print(f'uid: {uid}')
-
         uids.append(uid)
         yield from bps.sleep(float(delay))
     print('Done!')

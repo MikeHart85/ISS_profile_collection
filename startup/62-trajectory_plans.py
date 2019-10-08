@@ -271,6 +271,7 @@ def execute_xia_trajectory(name, **metadata):
               'interp_filename': interp_fn,
               'xia_max_energy': xia1.mca_max_energy.value,
               'xia_filename': xia_fn,
+              'xia_filename': xia_fn,
               'xia_rois': xia_rois,
               'angle_offset': str(hhm.angle_offset.value),
               'trajectory_name': hhm.trajectory_name.value,

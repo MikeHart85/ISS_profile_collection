@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
-from isstools.xiaparser import xiaparser
+from xas.xia import xiaparser
 
 def save_mca_to_file(filename, path = '/GPFS/xf08id/xia_files/', mcas = [xia1.mca1, xia1.mca2, xia1.mca3, xia1.mca4]):
     if path[-1] != '/':

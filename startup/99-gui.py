@@ -1,14 +1,14 @@
-#from isstools import xlive
+from isstools import xlive
 
 import atexit
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-'''
 
-# sample_stages = [{'x': giantxy.x.name, 'y': giantxy.y.name},
-#                  {'x': samplexy.x.name, 'y': samplexy.y.name},
-#                  {'x': huber_stage.z.name, 'y': huber_stage.y.name}]
+
+sample_stages = [{'x': giantxy.x.name, 'y': giantxy.y.name},
+                 {'x': samplexy.x.name, 'y': samplexy.y.name},
+                 {'x': huber_stage.z.name, 'y': huber_stage.y.name}]
 
 xlive_gui = xlive.XliveGui(plan_funcs={
                                     'Fly scan':                     fly_scan,
@@ -63,18 +63,17 @@ def xlive():
 
 xlive()
 print('Startup complete')
+#
+# sys.stdout = xlive_gui.emitstream_out
+# sys.stderr = xlive_gui.emitstream_err
+#
+#
+# #def cleaning():
+# #    if xlive_gui.piezo_thread.isRunning():
+# #        xlive_gui.toggle_piezo_fb(0)
+#
+# #atexit.register(cleaning)
 
-sys.stdout = xlive_gui.emitstream_out
-sys.stderr = xlive_gui.emitstream_err
-
-
-#def cleaning():
-#    if xlive_gui.piezo_thread.isRunning():
-#        xlive_gui.toggle_piezo_fb(0)
-
-#atexit.register(cleaning)
-
-'''
 
 
 
