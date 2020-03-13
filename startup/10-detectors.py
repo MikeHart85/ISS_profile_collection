@@ -137,6 +137,9 @@ tc_mask2_3 = EpicsSignal('XF:08IDA-OP{Mir:2-CM}T:Msk2_3-I',
 
 bpm_fm.stats1.kind = 'hinted'
 bpm_fm.stats1.total.kind = 'hinted'
+bpm_bt1.stats1.kind = 'hinted'
+bpm_bt1.stats1.total.kind = 'hinted'
+
 
 
 class Encoder(Device):

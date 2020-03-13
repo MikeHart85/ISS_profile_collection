@@ -48,6 +48,7 @@ xlive_gui = xlive.XliveGui(plan_funcs={
                            motors_dict=motor_dictionary,
                            sample_stage = giantxy,
                            tune_elements = tune_elements,
+                           tune_pcl = tune_pcl,
                            ic_amplifiers = ic_amplifiers,
                            window_title="XLive @ISS/08-ID NSLS-II",
                            )

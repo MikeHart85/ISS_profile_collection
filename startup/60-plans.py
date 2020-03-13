@@ -354,6 +354,7 @@ def tuning_scan(motor, detector, scan_range, scan_step, n_tries = 3, **kwargs):
             print(f'New motor position {motor_pos}')
 
             if motor_pos < min_threshold:
+                print('min')
                 yield from bps.mv(motor,min_limit)
                 if jj+1 < n_tries:
                     print(f' Starting {jj+2} try')
@@ -365,6 +366,10 @@ def tuning_scan(motor, detector, scan_range, scan_step, n_tries = 3, **kwargs):
             else:
                 yield from bps.mv(motor, motor_pos)
                 break
+
+
+# def yield_minmax_pos(uid):
+
 
 def wait_filter_in_place(status_pv):
     # for j in range(5):
