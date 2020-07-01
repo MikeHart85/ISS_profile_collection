@@ -1,11 +1,10 @@
 import itertools
 import uuid
-from collections import namedtuple, deque
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 import os
 import shutil
 import time as ttime
-import pandas as pd
 
 from ophyd import (ProsilicaDetector, SingleTrigger, Component as Cpt, Device,
                    EpicsSignal, EpicsSignalRO, ImagePlugin, StatsPlugin, ROIPlugin,
@@ -16,8 +15,9 @@ from ophyd.sim import NullStatus
 
 from datetime import datetime
 
-from databroker.assets.handlers_base import HandlerBase
+
 print(__file__)
+
 
 def print_now():
     return datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')
@@ -745,95 +745,3 @@ for jj in [1, 6, 7]:
     getattr(pba2, f'adc{jj}').volt.kind = 'hinted'
     getattr(pba1, f'adc{jj}').kind = 'hinted'
     getattr(pba2, f'adc{jj}').kind = 'hinted'
-
-
-
-
-
-class PizzaBoxEncHandlerTxt(HandlerBase):
-    encoder_row = namedtuple('encoder_row',
-                             ['ts_s', 'ts_ns', 'encoder', 'index', 'state'])
-    "Read PizzaBox text files using info from filestore."
-    def __init__(self, fpath, chunk_size):
-        self.chunk_size = chunk_size
-        with open(fpath, 'r') as f:
-            self.lines = list(f)
-
-    def __call__(self, chunk_num):
-        cs = self.chunk_size
-        return [self.encoder_row(*(int(v) for v in ln.split()))
-                for ln in self.lines[chunk_num*cs:(chunk_num+1)*cs]]
-
-
-class PizzaBoxDIHandlerTxt(HandlerBase):
-    di_row = namedtuple('di_row', ['ts_s', 'ts_ns', 'encoder', 'index', 'di'])
-    "Read PizzaBox text files using info from filestore."
-    def __init__(self, fpath, chunk_size):
-        self.chunk_size = chunk_size
-        with open(fpath, 'r') as f:
-            self.lines = list(f)
-
-    def __call__(self, chunk_num):
-        cs = self.chunk_size
-        return [self.di_row(*(int(v) for v in ln.split()))
-                for ln in self.lines[chunk_num*cs:(chunk_num+1)*cs]]
-
-
-class PizzaBoxAnHandlerTxt(HandlerBase):
-    encoder_row = namedtuple('encoder_row', ['ts_s', 'ts_ns', 'index', 'adc'])
-    "Read PizzaBox text files using info from filestore."
-
-    bases = (10, 10, 10, 16)
-    def __init__(self, fpath, chunk_size):
-        self.chunk_size = chunk_size
-        with open(fpath, 'r') as f:
-            self.lines = list(f)
-
-    def __call__(self, chunk_num):
-
-        cs = self.chunk_size
-        return [self.encoder_row(*(int(v, base=b) for v, b in zip(ln.split(), self.bases)))
-                for ln in self.lines[chunk_num*cs:(chunk_num+1)*cs]]
-
-
-
-db.reg.register_handler('PIZZABOX_AN_FILE_TXT',
-                        PizzaBoxAnHandlerTxt, overwrite=True)
-db.reg.register_handler('PIZZABOX_ENC_FILE_TXT',
-                        PizzaBoxEncHandlerTxt, overwrite=True)
-db.reg.register_handler('PIZZABOX_DI_FILE_TXT',
-                        PizzaBoxDIHandlerTxt, overwrite=True)
-
-
-# New handlers to support reading files into a Pandas dataframe
-class PizzaBoxAnHandlerTxtPD(HandlerBase):
-    "Read PizzaBox text files using info from filestore."
-    def __init__(self, fpath):
-        self.df = pd.read_table(fpath, names=['ts_s', 'ts_ns', 'index', 'adc'], sep=' ')
-
-    def __call__(self):
-        return self.df
-
-class PizzaBoxDIHandlerTxtPD(HandlerBase):
-    "Read PizzaBox text files using info from filestore."
-    def __init__(self, fpath):
-        self.df = pd.read_table(fpath, names=['ts_s', 'ts_ns', 'encoder', 'index', 'di'], sep=' ')
-
-    def __call__(self):
-        return self.df
-
-class PizzaBoxEncHandlerTxtPD(HandlerBase):
-    "Read PizzaBox text files using info from filestore."
-    def __init__(self, fpath):
-        self.df = pd.read_table(fpath, names=['ts_s', 'ts_ns', 'encoder', 'index', 'state'], sep=' ')
-
-    def __call__(self):
-        return self.df
-
-
-db.reg.register_handler('PIZZABOX_AN_FILE_TXT_PD',
-                        PizzaBoxAnHandlerTxtPD, overwrite=True)
-db.reg.register_handler('PIZZABOX_DI_FILE_TXT_PD',
-                        PizzaBoxDIHandlerTxtPD, overwrite=True)
-db.reg.register_handler('PIZZABOX_ENC_FILE_TXT_PD',
-                        PizzaBoxEncHandlerTxtPD, overwrite=True)
